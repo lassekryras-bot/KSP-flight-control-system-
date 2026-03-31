@@ -1,10 +1,11 @@
 import math
 
+
 def analyze(file="../data/runs.csv"):
     throttles = []
 
     try:
-        with open(file, "r") as f:
+        with open(file, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         for i, line in enumerate(lines):
@@ -15,7 +16,10 @@ def analyze(file="../data/runs.csv"):
             if len(parts) < 5:
                 continue
 
-            throttle = float(parts[3])
+            try:
+                throttle = float(parts[3])
+            except ValueError:
+                continue
             throttles.append(throttle)
 
     except FileNotFoundError:
