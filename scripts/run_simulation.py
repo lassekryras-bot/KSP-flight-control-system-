@@ -1,75 +1,49 @@
 #!/usr/bin/env python3
-"""Run simulation utilities for offline analysis.
+"""Run a lightweight offline simulation summary from recorded CSV runs.
 
-Default behavior summarizes existing CSV run data. Optionally, this can run the
-integrated deterministic simulator and print key events.
+This script validates that the data file exists and delegates statistical output
+to analysis.stats.analyze.
 """
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from pprint import pprint
 import sys
 
+# Allow importing from repository root when executed as a script.
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from analysis.stats import analyze
-from src.python.simulator import FlightSimulator
-from src.python.vehicle_registry import build_vehicle
-
-
-def run_stats(csv_file: Path) -> None:
-    """Print summary stats from an existing run CSV."""
-    analyze(str(csv_file))
-
-
-def run_simulation(max_time: float) -> None:
-    """Run the deterministic simulator and print event/transition output."""
-    demo_vehicle = build_vehicle("Mk1 Command Pod", "LV-T45 Swivel", "Mk16", "FL-T100")
-    print("Demo vehicle parts:")
-    pprint(demo_vehicle)
-
-    sim = FlightSimulator()
-    result = sim.run(max_time=max_time)
-
-    print("\n=== Simulation Summary ===")
-    print(f"Liftoff event: {result['events']['liftoff']}")
-    print(f"Stable ascent event: {result['events']['stable_ascent']}")
-    print(f"Touchdown velocity: {result['touchdown_velocity']:.2f} m/s")
-    print("Transitions:")
-    for transition in result["transitions"]:
-        print(f"  {transition}")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run CSV stats or deterministic simulation.")
-    parser.add_argument(
-        "--mode",
-        choices=("stats", "simulate"),
-        default="stats",
-        help="stats: summarize CSV data, simulate: run deterministic simulator",
+    parser = argparse.ArgumentParser(
+        description="Run offline analysis on flight run CSV data."
     )
     parser.add_argument(
-        "--csv",
-        type=Path,
-        default=REPO_ROOT / "data" / "runs.csv",
-        help="CSV file for --mode stats",
-    )
-    parser.add_argument(
-        "--max-time",
-        type=float,
-        default=90.0,
-        help="Simulation max time in seconds for --mode simulate",
+        "--data",
+        default="data/runs.csv",
+        help="Path to CSV file containing run data (default: data/runs.csv).",
     )
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main() -> int:
     args = parse_args()
-    if args.mode == "stats":
-        run_stats(args.csv)
-    else:
-        run_simulation(args.max_time)
+    data_path = REPO_ROOT / args.data
+
+    if not data_path.exists():
+        print(f"Data file not found: {data_path}")
+        return 1
+
+    print("=== Flight Test Analysis ===")
+    print(f"Data source: {data_path}")
+    analyze(str(data_path))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
