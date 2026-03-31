@@ -1,35 +1,42 @@
-# Shared Configuration for KSP Flight Control System
-
 physics:
   gravity: 9.81
-  drag_coefficient: 0.05
+  timestep: 0.02
 
-throttle_ramp:
-  initial_throttle: 0.0
-  max_throttle: 1.0
-  ramp_time: 5.0  # seconds
+vehicle:
+  dry_mass: 3.5
+  fuel_mass: 1.0
+  engine:
+    thrust: 167000
+    throttleable: true
+
+control:
+  kp: 0.4
+  kd: 0.3
+  smoothing: 0.2
+
+guidance:
+  ascent:
+    target_altitude: 100
+
+  descent:
+    target_velocity: -5
+
+  landing:
+    high_altitude_velocity: -2.0
+    low_altitude_velocity: -0.5
+    switch_altitude: 10
 
 detection:
-  sensor_range: 100.0  # meters
-  update_interval: 0.1  # seconds
+  parachute:
+    semi:
+      velocity: -20
+      altitude: 2000
+    full:
+      altitude: 1000
 
-control_parameters:
-  max_pitch_angle: 30.0
-  max_roll_angle: 15.0
-  stability_margin: 1.5
+state_transitions:
+  takeoff_to_ascent_altitude: 200
+  descent_to_landing_altitude: 100
 
-vehicle_parts:
-  engine:
-    type: "Rocket"
-    thrust: 200.0  # Newtons
-  wings:
-    aspect_ratio: 7.0
-    area: 20.0  # square meters
-
-simulation_settings:
-  time_step: 0.02  # seconds
-  max_simulation_time: 300.0  # seconds
-
-output_paths:
-  log_file: "output/log.txt"
-  results_file: "output/results.json"
+logging:
+  enabled: true
