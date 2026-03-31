@@ -19,14 +19,20 @@ public class FlightControllerV15 {
     private final double kd;
     private final double smoothing;
 
+    private final double landingHighAltitudeVelocity;
+    private final double landingLowAltitudeVelocity;
+    private final double landingSwitchAltitude;
+    private final double takeoffToAscentAltitude;
+    private final double descentToLandingAltitude;
+
     private Mode mode = null;
 
     private double time = 0;
     private double altitude = 0;
     private double velocity = 0;
 
-    private double mass;
-    private double thrust;
+    private final double mass;
+    private final double thrust;
 
     private double throttle = 0.0;
     private double prevThrottle = 0.0;
@@ -35,12 +41,27 @@ public class FlightControllerV15 {
         this.mass = mass;
         this.thrust = thrust;
 
-        Map<String, Object> config = (Map<String, Object>) ConfigLoader.load("config.yaml");
-        Map<String, Object> control = (Map<String, Object>) config.get("control");
+        Map<String, Object> config = requireMap(ConfigLoader.load("config.yaml"), "root");
+        Map<String, Object> control = requireMap(config.get("control"), "control");
+        Map<String, Object> guidance = requireMap(config.get("guidance"), "guidance");
+        Map<String, Object> landing = requireMap(guidance.get("landing"), "guidance.landing");
+        Map<String, Object> transitions = requireMap(config.get("state_transitions"), "state_transitions");
 
-        this.kp = ((Number) control.get("kp")).doubleValue();
-        this.kd = ((Number) control.get("kd")).doubleValue();
-        this.smoothing = ((Number) control.get("smoothing")).doubleValue();
+        this.kp = requireDouble(control, "kp", "control");
+        this.kd = requireDouble(control, "kd", "control");
+        this.smoothing = requireDouble(control, "smoothing", "control");
+
+        this.landingHighAltitudeVelocity =
+                requireDouble(landing, "high_altitude_velocity", "guidance.landing");
+        this.landingLowAltitudeVelocity =
+                requireDouble(landing, "low_altitude_velocity", "guidance.landing");
+        this.landingSwitchAltitude =
+                requireDouble(landing, "switch_altitude", "guidance.landing");
+
+        this.takeoffToAscentAltitude =
+                requireDouble(transitions, "takeoff_to_ascent_altitude", "state_transitions");
+        this.descentToLandingAltitude =
+                requireDouble(transitions, "descent_to_landing_altitude", "state_transitions");
     }
 
     public void update(double alt, double vel, double dt) {
@@ -64,7 +85,7 @@ public class FlightControllerV15 {
 
     private boolean shouldStartLanding() {
         double burnAlt = computeBurnAltitude();
-        return altitude <= burnAlt;
+        return altitude <= Math.max(burnAlt, descentToLandingAltitude);
     }
 
     // ----------------------------
@@ -90,7 +111,7 @@ public class FlightControllerV15 {
                 break;
 
             case TAKEOFF:
-                if (altitude > 200) setMode(Mode.FLYING);
+                if (altitude > takeoffToAscentAltitude) setMode(Mode.FLYING);
                 break;
 
             case FLYING:
@@ -117,9 +138,7 @@ public class FlightControllerV15 {
     private double computeThrottle(double targetV) {
         double hover = (mass * G) / thrust;
         double error = targetV - velocity;
-        double raw = hover
-                + kp * error
-                - kd * velocity;
+        double raw = hover + kp * error - kd * velocity;
         return clamp(raw, 0.0, 1.0);
     }
 
@@ -136,7 +155,9 @@ public class FlightControllerV15 {
                 break;
 
             case LANDING:
-                double targetV = (altitude > 10) ? -2 : -0.5;
+                double targetV = (altitude > landingSwitchAltitude)
+                        ? landingHighAltitudeVelocity
+                        : landingLowAltitudeVelocity;
                 targetThrottle = computeThrottle(targetV);
                 break;
 
@@ -150,6 +171,32 @@ public class FlightControllerV15 {
 
     private double clamp(double v, double min, double max) {
         return Math.max(min, Math.min(max, v));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> requireMap(Object value, String path) {
+        if (!(value instanceof Map<?, ?>)) {
+            throw new IllegalArgumentException("Missing or invalid map at config path: " + path);
+        }
+
+        Map<?, ?> rawMap = (Map<?, ?>) value;
+        for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+            if (!(entry.getKey() instanceof String)) {
+                throw new IllegalArgumentException("Non-string key found in config map: " + path);
+            }
+        }
+
+        return (Map<String, Object>) rawMap;
+    }
+
+    private static double requireDouble(Map<String, Object> map, String key, String path) {
+        Object value = map.get(key);
+        if (!(value instanceof Number)) {
+            throw new IllegalArgumentException(
+                    "Missing or non-numeric value at config path: " + path + "." + key);
+        }
+        Number number = (Number) value;
+        return number.doubleValue();
     }
 
     public double getThrottle() {
