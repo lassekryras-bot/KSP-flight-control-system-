@@ -1,5 +1,7 @@
 // v15 Flight Controller (Guidance + Control + Detection)
 
+import java.util.Map;
+
 public class FlightControllerV15 {
 
     public enum Mode {
@@ -12,8 +14,10 @@ public class FlightControllerV15 {
     }
 
     private static final double G = 9.81;
-    private static final double KP = 0.4;
-    private static final double KD = 0.3;
+
+    private final double kp;
+    private final double kd;
+    private final double smoothing;
 
     private Mode mode = null;
 
@@ -30,6 +34,13 @@ public class FlightControllerV15 {
     public FlightControllerV15(double mass, double thrust) {
         this.mass = mass;
         this.thrust = thrust;
+
+        Map<String, Object> config = (Map<String, Object>) ConfigLoader.load("config.yaml");
+        Map<String, Object> control = (Map<String, Object>) config.get("control");
+
+        this.kp = ((Number) control.get("kp")).doubleValue();
+        this.kd = ((Number) control.get("kd")).doubleValue();
+        this.smoothing = ((Number) control.get("smoothing")).doubleValue();
     }
 
     public void update(double alt, double vel, double dt) {
@@ -106,7 +117,9 @@ public class FlightControllerV15 {
     private double computeThrottle(double targetV) {
         double hover = (mass * G) / thrust;
         double error = targetV - velocity;
-        double raw = hover + (KP * error) - (KD * velocity);
+        double raw = hover
+                + kp * error
+                - kd * velocity;
         return clamp(raw, 0.0, 1.0);
     }
 
@@ -131,7 +144,7 @@ public class FlightControllerV15 {
                 targetThrottle = 0.0;
         }
 
-        throttle = ramp(prevThrottle, targetThrottle, 0.2);
+        throttle = ramp(prevThrottle, targetThrottle, smoothing);
         prevThrottle = throttle;
     }
 
