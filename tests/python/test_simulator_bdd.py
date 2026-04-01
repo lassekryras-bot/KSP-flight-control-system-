@@ -37,6 +37,32 @@ class TestFlightSimulatorBDD(unittest.TestCase):
         self.assertEqual(row["mode"], "takeoff")
         self.assertGreater(row["throttle"], 0.0)
 
+    def test_given_ascending_vehicle_when_above_trigger_then_parachute_stays_disarmed(self):
+        # Given: a simulator already moving upward near deployment altitude
+        sim = FlightSimulator(config=load_config())
+        sim.mode = "ascent"
+        sim.altitude = 1500.0
+        sim.velocity = 50.0
+
+        # When: one simulation step is executed
+        row = sim.step()
+
+        # Then: deployment is blocked while ascending
+        self.assertFalse(row["parachute_armed"])
+
+    def test_given_descending_vehicle_when_below_trigger_then_parachute_arms(self):
+        # Given: a simulator descending below the configured semi-deploy altitude
+        sim = FlightSimulator(config=load_config())
+        sim.mode = "descent"
+        sim.altitude = 1500.0
+        sim.velocity = -30.0
+
+        # When: one simulation step is executed
+        row = sim.step()
+
+        # Then: parachute should enter at least semi-deployed state
+        self.assertTrue(row["parachute_armed"])
+
 
 if __name__ == "__main__":
     unittest.main()

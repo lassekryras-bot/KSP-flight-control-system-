@@ -20,6 +20,7 @@ guidance:
 
   descent:
     target_velocity: -5
+    safe_landing_velocity: 6.0
 
   landing:
     high_altitude_velocity: -2.0
