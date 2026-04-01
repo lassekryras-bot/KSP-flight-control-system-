@@ -89,6 +89,51 @@ If you want Java tests that replay telemetry collected from the game (similar to
 
 This keeps both stacks deterministic and lets you validate controller logic without running KSP live in every test.
 
+
+## 🎮 kRPC with Java (live KSP)
+
+If you want to control **live KSP from Java** (instead of only replaying CSV fixtures), follow this flow:
+
+1. Install the kRPC plugin in KSP (GitHub/SpaceDock/CKAN).
+2. Launch KSP, load a save, open the kRPC window, and click **Start server**.
+3. Keep protocol set to **Protobuf over TCP**.
+4. Use `localhost` while your Java app runs on the same machine as KSP.
+5. Keep default ports unless you have conflicts:
+   - RPC: `50000`
+   - Stream: `50001`
+
+### Java client setup
+
+Use your preferred build tool and add the kRPC Java client dependency (or attach the client jar directly if you are not using Maven/Gradle).
+
+### Minimal Java “hello vessel” example
+
+```java
+import krpc.client.Connection;
+import krpc.client.RPCException;
+import krpc.client.services.SpaceCenter;
+
+public class HelloKrpc {
+    public static void main(String[] args) throws Exception {
+        try (Connection connection = Connection.newInstance("Hello from Java")) {
+            SpaceCenter spaceCenter = SpaceCenter.newInstance(connection);
+            SpaceCenter.Vessel vessel = spaceCenter.getActiveVessel();
+            System.out.println(vessel.getName());
+        }
+    }
+}
+```
+
+If this prints your active vessel name, your Java client is connected correctly.
+
+### Troubleshooting checklist
+
+- kRPC server window/icon in KSP is green.
+- Java app and KSP point to the same host/ports.
+- Firewall allows local TCP traffic for KSP and Java.
+- If connection prompts appear in KSP, allow the Java client.
+- Confirm you are running against a loaded flight/save (not only the KSP main menu).
+
 ## ⚙️ Configuration
 
 The Python simulator reads from `config.yaml` using `src/python/config_loader.py`. Java `DetectionSystem` parity tests are currently fixture-driven and do not require YAML parsing.
