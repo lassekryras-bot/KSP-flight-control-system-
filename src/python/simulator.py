@@ -29,6 +29,8 @@ class FlightSimulator:
 
         self.g = physics["gravity"]
         self.dt = physics["timestep"]
+        atmosphere = physics.get("atmosphere", {})
+        self.air_density = atmosphere.get("density", 1.225)
 
         self.dry_mass = vehicle["dry_mass"] * 1000.0
         self.fuel_mass = vehicle["fuel_mass"] * 1000.0
@@ -49,6 +51,9 @@ class FlightSimulator:
         parachute_cfg = self.config.get("detection", {}).get("parachute", {})
         self.parachute_semi_altitude = parachute_cfg.get("semi", {}).get("altitude", 1800.0)
         self.parachute_full_altitude = parachute_cfg.get("full", {}).get("altitude", 1000.0)
+        drag_cfg = parachute_cfg.get("drag", {})
+        self.parachute_semi_cd_area = drag_cfg.get("semi", {}).get("cd_area", 220.0)
+        self.parachute_full_cd_area = drag_cfg.get("full", {}).get("cd_area", 960.0)
         self.safe_landing_velocity = self.config.get("guidance", {}).get("descent", {}).get(
             "safe_landing_velocity", 6.0
         )
@@ -71,8 +76,9 @@ class FlightSimulator:
         if not self.parachute_armed or self.velocity >= 0.0:
             return 0.0
 
-        drag_strength = 0.4 if self.parachute_full_deploy else 0.12
-        return drag_strength * ((self.velocity * self.velocity) / self.mass)
+        cd_area = self.parachute_full_cd_area if self.parachute_full_deploy else self.parachute_semi_cd_area
+        drag_force = 0.5 * self.air_density * cd_area * (self.velocity * self.velocity)
+        return drag_force / self.mass
 
     def set_mode(self, new_mode: str) -> None:
         if self.mode != new_mode:

@@ -63,6 +63,32 @@ class TestFlightSimulatorBDD(unittest.TestCase):
         # Then: parachute should enter at least semi-deployed state
         self.assertTrue(row["parachute_armed"])
 
+    def test_given_full_deploy_parachute_when_simulated_then_velocity_stabilizes_near_terminal(self):
+        # Given: a pure descent scenario with full parachute deployment
+        cfg = load_config()
+        cfg["vehicle"]["engine"]["throttleable"] = False
+        cfg["vehicle"]["engine"]["thrust"] = 0.0
+        cfg["vehicle"]["fuel_mass"] = 0.0
+        cfg["detection"]["parachute"]["semi"]["altitude"] = 1500.0
+        cfg["detection"]["parachute"]["full"]["altitude"] = 1200.0
+
+        sim = FlightSimulator(config=cfg)
+        sim.mode = "descent"
+        sim.altitude = 1100.0
+        sim.velocity = -40.0
+        sim.mass = sim.dry_mass
+
+        # When: simulating long enough to converge on terminal velocity
+        velocity_trace = []
+        for _ in range(2000):
+            row = sim.step()
+            velocity_trace.append(row["velocity"])
+
+        # Then: velocity should settle into a stable terminal band around safe descent values
+        tail = velocity_trace[-200:]
+        self.assertTrue(all(-7.0 <= v <= -5.0 for v in tail))
+        self.assertLess(max(tail) - min(tail), 0.2)
+
 
 if __name__ == "__main__":
     unittest.main()
