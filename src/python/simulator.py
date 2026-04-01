@@ -14,6 +14,9 @@ class FlightSimulator:
     throttle: float = 0.0
     prev_throttle: float = 0.0
     transitions: list[tuple[float, str, str]] = field(default_factory=list)
+    parachute_armed: bool = False
+    parachute_full_deploy: bool = False
+    parachute_deploy_time: float | None = None
 
     def __post_init__(self) -> None:
         physics = self.config["physics"]
@@ -39,6 +42,28 @@ class FlightSimulator:
             ascent_threshold=1.0,
             ascent_duration=0.2,
         )
+        parachute_cfg = self.config.get("detection", {}).get("parachute", {})
+        self.parachute_semi_altitude = parachute_cfg.get("semi", {}).get("altitude", 1800.0)
+        self.parachute_full_altitude = parachute_cfg.get("full", {}).get("altitude", 1000.0)
+        self.safe_landing_velocity = self.config.get("guidance", {}).get("descent", {}).get(
+            "safe_landing_velocity", 6.0
+        )
+
+    def _update_parachute_state(self) -> None:
+        descending = self.velocity < 0.0
+        if not self.parachute_armed and descending and self.altitude <= self.parachute_semi_altitude:
+            self.parachute_armed = True
+            self.parachute_deploy_time = self.time
+
+        if self.parachute_armed and self.altitude <= self.parachute_full_altitude:
+            self.parachute_full_deploy = True
+
+    def _compute_parachute_drag_acceleration(self) -> float:
+        if not self.parachute_armed or self.velocity >= 0.0:
+            return 0.0
+
+        drag_strength = 0.4 if self.parachute_full_deploy else 0.12
+        return drag_strength * ((self.velocity * self.velocity) / self.mass)
 
     def set_mode(self, new_mode: str) -> None:
         if self.mode != new_mode:
@@ -95,8 +120,11 @@ class FlightSimulator:
         else:
             self.throttle = 0.0
 
+        self._update_parachute_state()
+
         thrust_force = self.thrust * self.throttle if self.throttleable else self.thrust
         acceleration = (thrust_force - (self.mass * self.g)) / self.mass
+        acceleration += self._compute_parachute_drag_acceleration()
 
         self.velocity += acceleration * self.dt
         self.altitude = max(0.0, self.altitude + self.velocity * self.dt)
@@ -114,6 +142,8 @@ class FlightSimulator:
             "altitude": self.altitude,
             "velocity": self.velocity,
             "throttle": self.throttle,
+            "parachute_armed": self.parachute_armed,
+            "parachute_full_deploy": self.parachute_full_deploy,
             "liftoff_event": liftoff,
             "ascent_event": ascent,
         }
@@ -133,5 +163,6 @@ class FlightSimulator:
         return {
             "events": events,
             "touchdown_velocity": self.velocity,
+            "landing_safe": abs(self.velocity) <= self.safe_landing_velocity,
             "transitions": self.transitions,
         }
