@@ -35,6 +35,19 @@ pip install -r requirements.txt pytest
 python scripts/run_simulation.py
 ```
 
+### Parachute envelope mapping sweep
+
+```bash
+python scripts/run_parachute_envelope.py
+```
+
+This command runs the mandatory deployment-altitude scenario matrix and prints:
+
+- deployment altitude + velocity,
+- time/velocity at full deployment,
+- touchdown velocity,
+- outcome classification using the mission acceptance metric (`≤ 6 m/s` safe touchdown).
+
 Optional custom input file:
 
 ```bash

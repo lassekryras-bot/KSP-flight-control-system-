@@ -17,6 +17,10 @@ class FlightSimulator:
     parachute_armed: bool = False
     parachute_full_deploy: bool = False
     parachute_deploy_time: float | None = None
+    parachute_deploy_altitude: float | None = None
+    parachute_deploy_velocity: float | None = None
+    parachute_full_deploy_time: float | None = None
+    parachute_full_deploy_velocity: float | None = None
 
     def __post_init__(self) -> None:
         physics = self.config["physics"]
@@ -54,9 +58,14 @@ class FlightSimulator:
         if not self.parachute_armed and descending and self.altitude <= self.parachute_semi_altitude:
             self.parachute_armed = True
             self.parachute_deploy_time = self.time
+            self.parachute_deploy_altitude = self.altitude
+            self.parachute_deploy_velocity = self.velocity
 
         if self.parachute_armed and self.altitude <= self.parachute_full_altitude:
             self.parachute_full_deploy = True
+            if self.parachute_full_deploy_time is None:
+                self.parachute_full_deploy_time = self.time
+                self.parachute_full_deploy_velocity = self.velocity
 
     def _compute_parachute_drag_acceleration(self) -> float:
         if not self.parachute_armed or self.velocity >= 0.0:
@@ -164,5 +173,13 @@ class FlightSimulator:
             "events": events,
             "touchdown_velocity": self.velocity,
             "landing_safe": abs(self.velocity) <= self.safe_landing_velocity,
+            "deploy_altitude": self.parachute_deploy_altitude,
+            "deploy_velocity": self.parachute_deploy_velocity,
+            "time_to_full_deploy": (
+                self.parachute_full_deploy_time - self.parachute_deploy_time
+                if self.parachute_full_deploy_time is not None and self.parachute_deploy_time is not None
+                else None
+            ),
+            "velocity_at_full_deploy": self.parachute_full_deploy_velocity,
             "transitions": self.transitions,
         }
