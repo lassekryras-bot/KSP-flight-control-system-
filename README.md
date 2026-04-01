@@ -102,26 +102,44 @@ If you want to control **live KSP from Java** (instead of only replaying CSV fix
    - RPC: `50000`
    - Stream: `50001`
 
-### Java client setup
+### Java client setup (accurate kRPC packaging)
 
-Use your preferred build tool and add the kRPC Java client dependency (or attach the client jar directly if you are not using Maven/Gradle).
+Per the kRPC Java docs, the `krpc-java` client itself is distributed as a jar from GitHub releases (not as a normal Maven Central dependency).
+
+1. Download these jars:
+   - `krpc-java-<version>.jar` from kRPC GitHub releases
+   - `protobuf-java` jar
+   - `javatuples` jar
+2. Put them in a local folder such as `libs/`.
+
+#### Gradle example (local jars)
+
+```gradle
+dependencies {
+    implementation files('libs/krpc-java-0.5.4.jar')
+    implementation files('libs/protobuf-java-3.4.0.jar')
+    implementation files('libs/javatuples-1.2.jar')
+}
+```
+
+#### Maven example (install local jars once, then depend normally)
+
+```bash
+mvn install:install-file -Dfile=libs/krpc-java-0.5.4.jar -DgroupId=io.krpc -DartifactId=krpc-java -Dversion=0.5.4 -Dpackaging=jar
+mvn install:install-file -Dfile=libs/javatuples-1.2.jar -DgroupId=org.javatuples -DartifactId=javatuples -Dversion=1.2 -Dpackaging=jar
+```
+
+`protobuf-java` can be pulled directly from Maven Central in your `pom.xml`.
 
 ### Minimal Java “hello vessel” example
 
-```java
-import krpc.client.Connection;
-import krpc.client.RPCException;
-import krpc.client.services.SpaceCenter;
+A ready-to-run file is included at `examples/java/HelloKrpc.java`.
 
-public class HelloKrpc {
-    public static void main(String[] args) throws Exception {
-        try (Connection connection = Connection.newInstance("Hello from Java")) {
-            SpaceCenter spaceCenter = SpaceCenter.newInstance(connection);
-            SpaceCenter.Vessel vessel = spaceCenter.getActiveVessel();
-            System.out.println(vessel.getName());
-        }
-    }
-}
+Compile/run manually with local jars:
+
+```bash
+javac -cp "libs/krpc-java-0.5.4.jar:libs/protobuf-java-3.4.0.jar:libs/javatuples-1.2.jar" examples/java/HelloKrpc.java
+java -cp ".:examples/java:libs/krpc-java-0.5.4.jar:libs/protobuf-java-3.4.0.jar:libs/javatuples-1.2.jar" HelloKrpc
 ```
 
 If this prints your active vessel name, your Java client is connected correctly.
