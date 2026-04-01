@@ -1,94 +1,63 @@
 # 🚀 KSP Flight Control System
 
-A hybrid Java + Python sandbox for Kerbal Space Program-style flight control experiments.
+A lightweight **Java + Python** flight-control playground for Kerbal Space Program concepts using shared YAML configuration.
 
-This repository currently focuses on:
-- Java controller logic (`FlightControllerV15`) with YAML-driven tuning.
-- Python analysis utilities for reviewing captured run data.
-
-## 📦 Repository layout
+## 📦 Current Repository Layout
 
 ```text
 KSP-flight-control-system-/
 ├── FlightController.java              # Simple Java demo controller
 ├── java/
-│   ├── ConfigLoader.java              # Minimal YAML parser/loader
-│   └── FlightControllerV15.java       # Guidance + mode + throttle controller
+│   ├── ConfigLoader.java              # Minimal YAML loader
+│   └── FlightControllerV15.java       # Config-driven guidance/control logic
 ├── scripts/
-│   └── run_simulation.py              # Offline analysis entrypoint
+│   └── run_simulation.py              # Offline CSV-based analysis runner
 ├── analysis/
-│   ├── stats.py                       # Statistical summary (mean/stddev/min/max)
-│   └── plot.py                        # Plot helper for run CSV files
+│   ├── stats.py                       # Basic statistical summary
+│   └── plot.py                        # Quick plotting helper
 ├── data/
-│   └── runs.csv                       # Example run dataset
-├── config.yaml                        # Shared parameters for controller tuning
+│   └── runs.csv                       # Sample run data
+├── config.yaml                        # Shared config used by Java controller
 └── requirements.txt                   # Python dependencies
 ```
 
-## 🚀 Quick start
+## 🚀 Quick Start
 
-### Python analysis
+### Python offline analysis
 
 ```bash
 python scripts/run_simulation.py
 ```
 
-Optional custom data path:
+Optional custom input file:
 
 ```bash
 python scripts/run_simulation.py --data data/runs.csv
 ```
 
-### Java compile smoke check
+### Java compile check
 
 ```bash
 javac FlightController.java java/ConfigLoader.java java/FlightControllerV15.java
 ```
 
-## ⚙️ Config keys used by `FlightControllerV15`
+## ⚙️ Configuration
 
-- `control.kp`
-- `control.kd`
-- `control.smoothing`
+The Java `FlightControllerV15` currently reads these config sections from `config.yaml`:
+
+- `control.kp`, `control.kd`, `control.smoothing`
 - `guidance.landing.high_altitude_velocity`
 - `guidance.landing.low_altitude_velocity`
 - `guidance.landing.switch_altitude`
 - `state_transitions.takeoff_to_ascent_altitude`
 - `state_transitions.descent_to_landing_altitude`
 
-## 📊 Analysis notes
+## 📊 Analysis utilities
 
-`analysis/stats.py` expects a CSV with these columns:
-- `run_id`
-- `ramp_rate`
-- `time`
-- `throttle`
-- `velocity`
-
-`scripts/run_simulation.py` validates these headers before printing summary output.
-
-
-## ✅ Automated smoke target
-
-Run the minimal automated checks locally:
-
-```bash
-make smoke-test
-```
-
-This executes:
-- Python syntax + runner smoke checks
-- Java compile smoke check (`--release 11`)
-
-## 🤖 CI workflow
-
-GitHub Actions workflow: `.github/workflows/ci.yml`
-
-It runs on push and pull requests, and executes `make smoke-test` on Ubuntu with:
-- Python 3.11
-- Temurin Java 11
+- `analysis/stats.py` prints average/stddev/min/max throttle.
+- `analysis/plot.py` plots throttle over runs and histogram distribution.
 
 ## ℹ️ Notes
 
-- `archive/` contains historical/legacy experiment scripts.
-- `simulation/` contains mirrored experimentation artifacts.
+- `archive/` contains historical experiments and legacy versions.
+- `simulation/` mirrors some files for experimentation.

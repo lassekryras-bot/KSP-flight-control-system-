@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Run a lightweight offline simulation summary from recorded CSV runs."""
+"""Run a lightweight offline simulation summary from recorded CSV runs.
+
+This script validates that the data file exists and delegates statistical output
+to analysis.stats.analyze.
+"""
 
 from __future__ import annotations
 
 import argparse
-import csv
 from pathlib import Path
 import sys
 
@@ -30,31 +33,13 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def validate_csv(path: Path) -> None:
-    with path.open("r", encoding="utf-8", newline="") as handle:
-        reader = csv.DictReader(handle)
-        if reader.fieldnames is None:
-            raise ValueError("CSV file is missing a header row.")
-
-        missing = REQUIRED_COLUMNS - set(reader.fieldnames)
-        if missing:
-            missing_str = ", ".join(sorted(missing))
-            raise ValueError(f"CSV file is missing required columns: {missing_str}")
-
-
 def main() -> int:
     args = parse_args()
-    data_path = (REPO_ROOT / args.data).resolve()
+    data_path = REPO_ROOT / args.data
 
     if not data_path.exists():
         print(f"Data file not found: {data_path}")
         return 1
-
-    try:
-        validate_csv(data_path)
-    except ValueError as exc:
-        print(f"Invalid data file: {exc}")
-        return 2
 
     print("=== Flight Test Analysis ===")
     print(f"Data source: {data_path}")
