@@ -8,6 +8,7 @@ public class DetectionParityTest {
 
     public static void main(String[] args) throws Exception {
         String path = args.length > 0 ? args[0] : "tests/fixtures/telemetry_profile.csv";
+        boolean verbose = args.length > 1 && "--verbose".equals(args[1]);
 
         DetectionSystem liftoff = new DetectionSystem(0.01, 0.0);
         DetectionSystem ascent = new DetectionSystem(1.0, 0.2);
@@ -31,9 +32,15 @@ public class DetectionParityTest {
 
                 if (liftoff.update(velocity, dt) && liftoffTime == null) {
                     liftoffTime = currentTime;
+                    if (verbose) {
+                        System.out.println("liftoff detected at t=" + currentTime + "s");
+                    }
                 }
                 if (ascent.update(velocity, dt) && ascentTime == null) {
                     ascentTime = currentTime;
+                    if (verbose) {
+                        System.out.println("stable ascent detected at t=" + currentTime + "s");
+                    }
                 }
             }
         } catch (IOException io) {
@@ -42,6 +49,11 @@ public class DetectionParityTest {
 
         assertEqual("liftoff", 0.1, liftoffTime);
         assertEqual("stable_ascent", 0.5, ascentTime);
+
+        if (verbose) {
+            System.out.println("expected liftoff=0.1s, stable_ascent=0.5s");
+            System.out.println("actual liftoff=" + liftoffTime + "s, stable_ascent=" + ascentTime + "s");
+        }
 
         System.out.println("Detection parity test passed.");
     }

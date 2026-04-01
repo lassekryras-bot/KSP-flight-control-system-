@@ -47,5 +47,9 @@ def test_dual_threshold_detector_with_shared_fixture() -> None:
         if ascent_event and stable_ascent_time is None:
             stable_ascent_time = current_time
 
+    print(
+        f"detection parity: liftoff_time={liftoff_time}, stable_ascent_time={stable_ascent_time}"
+    )
+
     assert liftoff_time == 0.1
     assert stable_ascent_time == 0.5
