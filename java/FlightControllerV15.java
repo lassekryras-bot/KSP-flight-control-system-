@@ -175,9 +175,10 @@ public class FlightControllerV15 {
 
     @SuppressWarnings("unchecked")
     private static Map<String, Object> requireMap(Object value, String path) {
-        if (!(value instanceof Map<?, ?> rawMap)) {
+        if (!(value instanceof Map<?, ?>)) {
             throw new IllegalArgumentException("Missing or invalid map at config path: " + path);
         }
+        Map<?, ?> rawMap = (Map<?, ?>) value;
 
         for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
             if (!(entry.getKey() instanceof String)) {
@@ -190,10 +191,11 @@ public class FlightControllerV15 {
 
     private static double requireDouble(Map<String, Object> map, String key, String path) {
         Object value = map.get(key);
-        if (!(value instanceof Number number)) {
+        if (!(value instanceof Number)) {
             throw new IllegalArgumentException(
                     "Missing or non-numeric value at config path: " + path + "." + key);
         }
+        Number number = (Number) value;
         return number.doubleValue();
     }
 
