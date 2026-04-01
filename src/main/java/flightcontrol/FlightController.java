@@ -9,14 +9,31 @@ package flightcontrol;
  */
 public class FlightController {
 
-    private ThrottleRampController ramp;
-    private DetectionSystem detection;
-    private RunLogger logger;
+    private final ThrottleRampController ramp;
+    private final DetectionSystem detection;
+    private final RunLogger logger;
 
     public FlightController(double rampRate, double velocityThreshold, double duration, String logFile) {
+        this(rampRate, velocityThreshold, duration, logFile, KRPCClient.GameMode.SANDBOX);
+    }
+
+    public FlightController(
+            double rampRate,
+            double velocityThreshold,
+            double duration,
+            String logFile,
+            KRPCClient.GameMode gameMode) {
         this.ramp = new ThrottleRampController(rampRate);
         this.detection = new DetectionSystem(velocityThreshold, duration);
         this.logger = new RunLogger(logFile);
+        KRPCClient.setGameMode(gameMode);
+    }
+
+    /**
+     * Utility helper for wiring mode from environment-based launch scripts.
+     */
+    public static KRPCClient.GameMode resolveGameModeFromEnvironment() {
+        return KRPCClient.GameMode.fromString(System.getenv("KSP_GAME_MODE"));
     }
 
     public void runTest(int runId) {
@@ -28,7 +45,7 @@ public class FlightController {
         while (true) {
             double throttle = ramp.getThrottle();
 
-            // Send throttle to KRPC
+            // Send throttle to kRPC (mode-aware behavior handled in KRPCClient)
             KRPCClient.setThrottle(throttle);
 
             double velocity = KRPCClient.getVerticalVelocity();
@@ -49,6 +66,7 @@ public class FlightController {
     private void sleep(int ms) {
         try {
             Thread.sleep(ms);
-        } catch (InterruptedException ignored) {}
+        } catch (InterruptedException ignored) {
+        }
     }
 }
