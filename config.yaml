@@ -1,6 +1,8 @@
 physics:
   gravity: 9.81
   timestep: 0.02
+  atmosphere:
+    density: 1.225
 
 vehicle:
   dry_mass: 3.5
@@ -34,6 +36,11 @@ detection:
       altitude: 2000
     full:
       altitude: 1000
+    drag:
+      semi:
+        cd_area: 420.0
+      full:
+        cd_area: 1600.0
 
 state_transitions:
   takeoff_to_ascent_altitude: 200
