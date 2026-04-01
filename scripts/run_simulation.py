@@ -18,6 +18,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from analysis.stats import analyze
 
+REQUIRED_COLUMNS = {"run_id", "ramp_rate", "time", "throttle", "velocity"}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(

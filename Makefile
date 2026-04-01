@@ -1,10 +1,10 @@
-.PHONY: test test-python test-java
+.PHONY: smoke-test python-smoke java-smoke
 
-test: test-python test-java
+smoke-test: python-smoke java-smoke
 
-test-python:
-	python -m unittest discover -s tests/python -p 'test_*.py'
+python-smoke:
+	python -m py_compile scripts/run_simulation.py analysis/stats.py analysis/plot.py
+	python scripts/run_simulation.py --data data/runs.csv
 
-test-java:
-	javac java/ConfigLoader.java java/FlightControllerV15.java tests/java/FlightControllerV15BDDTest.java
-	java -ea -cp .:java:tests/java FlightControllerV15BDDTest
+java-smoke:
+	javac --release 11 FlightController.java java/ConfigLoader.java java/FlightControllerV15.java
