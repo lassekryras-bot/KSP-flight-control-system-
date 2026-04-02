@@ -1,0 +1,9 @@
+# Global constants used across the project.
+atmosphere:
+  standard_pressure_pa: 101325.0
+
+gravity:
+  kerbin_surface_mps2: 9.81
+
+units:
+  ton_to_kg: 1000.0

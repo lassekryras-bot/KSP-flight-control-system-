@@ -1,0 +1,36 @@
+part_name: Mk16 Parachute
+type: radial_parachute
+
+mass: 0.1
+cost: 422
+drag_coefficient: 0.1
+
+thermal_limits:
+  max_temp: 650
+
+deployment:
+  semi:
+    drag: 1
+    min_pressure: 0.04
+
+  full:
+    drag: 500
+    deploy_altitude: 1000
+
+safety:
+  max_safe_full_deploy_speed: 255
+  impact_tolerance: 12
+
+behavior:
+  requires_activation: true
+  requires_command_module: true
+  role: main
+  deployment_priority: 2
+  deployment_stages:
+    - unactivated
+    - armed
+    - semi_deployed
+    - fully_deployed
+  notes:
+    slow_transition_to_full_deploy: true
+    significant_altitude_loss_during_deploy: true

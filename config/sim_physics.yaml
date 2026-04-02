@@ -1,0 +1,33 @@
+# Simulation-focused physics settings.
+parachutes:
+  full_deploy_delay_seconds: 1.0
+  significant_altitude_loss_during_deploy: true
+
+descent:
+  default_safe_vertical_speed_mps: -5.0
+
+engine:
+  time_step_seconds: 0.1
+  atmosphere_scale_height_m: 5000.0
+  surface_density_kgpm3: 1.225
+  base_drag_area_m2: 0.3
+  parachute_drag_area_scale: 0.05
+
+auto_trigger:
+  descent_detection_vertical_speed_mps: -0.5
+  narrow_window_altitude_margin_m: 250.0
+  unrecoverable_altitude_m: 100.0
+  default_policy_mode: strict
+  policy_modes:
+    strict:
+      trigger_in_safe: true
+      trigger_in_risky: true
+      trigger_in_unrecoverable: false
+    best_effort:
+      trigger_in_safe: true
+      trigger_in_risky: true
+      trigger_in_unrecoverable: true
+    observe_only:
+      trigger_in_safe: false
+      trigger_in_risky: false
+      trigger_in_unrecoverable: false

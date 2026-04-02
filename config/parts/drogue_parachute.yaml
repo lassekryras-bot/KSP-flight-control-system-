@@ -1,0 +1,36 @@
+part_name: Test Drogue Parachute
+type: drogue_parachute
+
+mass: 0.05
+cost: 280
+drag_coefficient: 0.08
+
+thermal_limits:
+  max_temp: 700
+
+deployment:
+  semi:
+    drag: 4
+    min_pressure: 0.01
+
+  full:
+    drag: 80
+    deploy_altitude: 2500
+
+safety:
+  max_safe_full_deploy_speed: 400
+  impact_tolerance: 35
+
+behavior:
+  requires_activation: true
+  requires_command_module: true
+  role: drogue
+  deployment_priority: 1
+  deployment_stages:
+    - unactivated
+    - armed
+    - semi_deployed
+    - fully_deployed
+  notes:
+    slow_transition_to_full_deploy: false
+    significant_altitude_loss_during_deploy: false

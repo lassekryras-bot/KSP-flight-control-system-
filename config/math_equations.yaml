@@ -1,0 +1,10 @@
+# Reference equations for future control and simulation work.
+equations:
+  gravity_force: "F = m * g"
+  dynamic_pressure: "q = 0.5 * rho * v^2"
+  weight: "W = m * g"
+  thrust_to_weight: "TWR = thrust / (mass * g)"
+
+notes:
+  - "These equations are documentation/config references for the control layer."
+  - "The runtime may use only a subset until more flight-control logic is implemented."

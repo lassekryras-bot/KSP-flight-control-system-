@@ -1,0 +1,6 @@
+# Parts catalog entry points.
+parachutes:
+  default: mk16_parachute
+  files:
+    drogue_parachute: drogue_parachute.yaml
+    mk16_parachute: mk16_parachute.yaml
